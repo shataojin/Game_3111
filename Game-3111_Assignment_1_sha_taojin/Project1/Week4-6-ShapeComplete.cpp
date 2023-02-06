@@ -545,6 +545,19 @@ void MyCastleApp::BuildShapeGeometry()
 	GeometryGenerator::MeshData sphere = geoGen.CreateSphere(0.5f, 20, 20);//ball
 	GeometryGenerator::MeshData cylinder = geoGen.CreateCylinder(0.5f, 0.3f, 3.0f, 20, 20);//Cylinder
 
+	///<summary>
+	/// new 3d shapes build
+	///</summary>
+
+	GeometryGenerator::MeshData cone = geoGen.CreateCone(0.5f, 1.0f, 20, 20);
+	GeometryGenerator::MeshData Pyramid_flat_head = geoGen.CreatePyramid_flat_head(1.5f, 0.5f, 1.0f, 0);
+	GeometryGenerator::MeshData Pyramid_pointed_head = geoGen.CreatePyramid_pointed_head(1.5f, 0.5f, 0);
+	GeometryGenerator::MeshData wedge = geoGen.CreateWedge(1.0, 1.0f, 1.0, 3); 
+	GeometryGenerator::MeshData pointed_cylinder = geoGen.Createpointed_cylinder(5.0f, 5.0f, 1);
+	GeometryGenerator::MeshData TriangularPrism = geoGen.CreateTriangularPrism(5.0f, 5.0f, 1);
+
+
+
 	// We are concatenating all the geometry into one big vertex/index buffer.  So
 	// define the regions in the buffer each submesh covers.
 

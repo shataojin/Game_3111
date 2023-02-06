@@ -114,14 +114,18 @@ public:
 	///<summary>
 	/// new 3d objs
 	///</summary>
+
 	MeshData CreateCone(float bottomRadius, float height, uint32 sliceCount, uint32 stackCount);
 
-	MeshData CreatePyramidtriangular(float bottomEdge, float topEdge, float height,uint32 numSubdivisions);
+	MeshData CreatePyramid_flat_head(float bottomEdge, float topEdge, float height,uint32 numSubdivisions);
 
+	MeshData CreateWedge(float width, float height, float depth, uint32 numSubdivisions);
 	
+	MeshData CreatePyramid_pointed_head(float bottomEdge, float height, uint32 numSubdivisions);
 
+	MeshData Createpointed_cylinder(float width, float height, uint32 stackCount);
 
-
+	MeshData CreateTriangularPrism(float width, float height, uint32 numSubdivisions);
 
 	void Subdivide(MeshData& meshData);
 private:
