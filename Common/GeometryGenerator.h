@@ -125,7 +125,6 @@ public:
 
 	MeshData Createpointed_cylinder(float width, float height, uint32 stackCount);
 
-	MeshData CreateTriangularPrism(float width, float height, uint32 numSubdivisions);
 
 	void Subdivide(MeshData& meshData);
 private:

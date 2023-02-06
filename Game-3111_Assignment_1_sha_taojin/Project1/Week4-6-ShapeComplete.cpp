@@ -554,7 +554,7 @@ void MyCastleApp::BuildShapeGeometry()
 	GeometryGenerator::MeshData Pyramid_pointed_head = geoGen.CreatePyramid_pointed_head(1.5f, 0.5f, 0);
 	GeometryGenerator::MeshData wedge = geoGen.CreateWedge(1.0, 1.0f, 1.0, 3); 
 	GeometryGenerator::MeshData pointed_cylinder = geoGen.Createpointed_cylinder(5.0f, 5.0f, 1);
-	GeometryGenerator::MeshData TriangularPrism = geoGen.CreateTriangularPrism(5.0f, 5.0f, 1);
+
 
 
 
@@ -567,11 +567,29 @@ void MyCastleApp::BuildShapeGeometry()
 	UINT sphereVertexOffset = gridVertexOffset + (UINT)grid.Vertices.size();
 	UINT cylinderVertexOffset = sphereVertexOffset + (UINT)sphere.Vertices.size();
 
+
+	UINT coneVertexOffset = cylinderVertexOffset + (UINT)cylinder.Vertices.size();
+	UINT Pyramid_flat_headVertexOffset = coneVertexOffset + (UINT)cone.Vertices.size();
+	UINT Pyramid_pointed_headVertexOffset = Pyramid_flat_headVertexOffset + (UINT)Pyramid_flat_head.Vertices.size();
+	UINT wedgeVertexOffset = Pyramid_pointed_headVertexOffset + (UINT)Pyramid_pointed_head.Vertices.size();
+	UINT pointed_cylinderVertexOffset = wedgeVertexOffset + (UINT)wedge.Vertices.size();
+
+
+
 	// Cache the starting index for each object in the concatenated index buffer.
 	UINT boxIndexOffset = 0;
 	UINT gridIndexOffset = (UINT)box.Indices32.size();
 	UINT sphereIndexOffset = gridIndexOffset + (UINT)grid.Indices32.size();
 	UINT cylinderIndexOffset = sphereIndexOffset + (UINT)sphere.Indices32.size();
+
+
+	UINT coneIndexOffset = cylinderIndexOffset + (UINT)cylinder.Indices32.size();
+	UINT Pyramid_flat_headIndexOffset = coneIndexOffset + (UINT)cone.Indices32.size();
+	UINT Pyramid_pointed_headIndexOffset = Pyramid_flat_headIndexOffset + (UINT)Pyramid_flat_head.Indices32.size();
+	UINT wedgeIndexOffset = Pyramid_pointed_headIndexOffset + (UINT)Pyramid_pointed_head.Indices32.size();
+	UINT pointed_cylinderIndexOffset = wedgeIndexOffset + (UINT)wedge.Indices32.size();
+
+
 
 	// Define the SubmeshGeometry that cover different
 	// regions of the vertex/index buffers.
@@ -596,6 +614,36 @@ void MyCastleApp::BuildShapeGeometry()
 	cylinderSubmesh.StartIndexLocation = cylinderIndexOffset;
 	cylinderSubmesh.BaseVertexLocation = cylinderVertexOffset;
 
+
+
+
+	SubmeshGeometry coneSubmesh;
+	coneSubmesh.IndexCount = (UINT)cone.Indices32.size();
+	coneSubmesh.StartIndexLocation = coneIndexOffset;
+	coneSubmesh.BaseVertexLocation = coneVertexOffset;
+
+	SubmeshGeometry Pyramid_flat_headSubmesh;
+	Pyramid_flat_headSubmesh.IndexCount = (UINT)Pyramid_flat_head.Indices32.size();
+	Pyramid_flat_headSubmesh.StartIndexLocation = Pyramid_flat_headIndexOffset;
+	Pyramid_flat_headSubmesh.BaseVertexLocation = Pyramid_flat_headVertexOffset;
+
+	SubmeshGeometry Pyramid_pointed_headSubmesh;
+	Pyramid_pointed_headSubmesh.IndexCount = (UINT)Pyramid_pointed_head.Indices32.size();
+	Pyramid_pointed_headSubmesh.StartIndexLocation = Pyramid_pointed_headIndexOffset;
+	Pyramid_pointed_headSubmesh.BaseVertexLocation = Pyramid_pointed_headVertexOffset;
+
+	SubmeshGeometry wedgeSubmesh;
+	wedgeSubmesh.IndexCount = (UINT)wedge.Indices32.size();
+	wedgeSubmesh.StartIndexLocation = wedgeIndexOffset;
+	wedgeSubmesh.BaseVertexLocation = wedgeVertexOffset;
+
+	SubmeshGeometry pointed_cylinderSubmesh;
+	pointed_cylinderSubmesh.IndexCount = (UINT)pointed_cylinder.Indices32.size();
+	pointed_cylinderSubmesh.StartIndexLocation = pointed_cylinderIndexOffset;
+	pointed_cylinderSubmesh.BaseVertexLocation = pointed_cylinderVertexOffset;
+
+
+
 	// Extract the vertex elements we are interested in and pack the
 	// vertices of all the meshes into one vertex buffer.
 
@@ -603,7 +651,15 @@ void MyCastleApp::BuildShapeGeometry()
 		box.Vertices.size() +
 		grid.Vertices.size() +
 		sphere.Vertices.size() +
-		cylinder.Vertices.size();
+		cylinder.Vertices.size()+
+
+
+		cone.Vertices.size() +
+		Pyramid_flat_head.Vertices.size() +
+		Pyramid_pointed_head.Vertices.size() +
+		wedge.Vertices.size() +
+		pointed_cylinder.Vertices.size() 
+		;
 
 
 	std::vector<Vertex> vertices(totalVertexCount);
@@ -635,11 +691,49 @@ void MyCastleApp::BuildShapeGeometry()
 	}
 
 
+	for (size_t i = 0; i < cone.Vertices.size(); ++i, ++k)
+	{
+		vertices[k].Pos = cone.Vertices[i].Position;
+		vertices[k].Color = XMFLOAT4(DirectX::Colors::Gold);
+	}
+	for (size_t i = 0; i < Pyramid_flat_head.Vertices.size(); ++i, ++k)
+	{
+		vertices[k].Pos = Pyramid_flat_head.Vertices[i].Position;
+		vertices[k].Color = XMFLOAT4(DirectX::Colors::Gold);
+	}
+	for (size_t i = 0; i < Pyramid_pointed_head.Vertices.size(); ++i, ++k)
+	{
+		vertices[k].Pos = Pyramid_pointed_head.Vertices[i].Position;
+		vertices[k].Color = XMFLOAT4(DirectX::Colors::Gold);
+	}
+	for (size_t i = 0; i < wedge.Vertices.size(); ++i, ++k)
+	{
+		vertices[k].Pos = wedge.Vertices[i].Position;
+		vertices[k].Color = XMFLOAT4(DirectX::Colors::Gold);
+	}
+	for (size_t i = 0; i < pointed_cylinder.Vertices.size(); ++i, ++k)
+	{
+		vertices[k].Pos = pointed_cylinder.Vertices[i].Position;
+		vertices[k].Color = XMFLOAT4(DirectX::Colors::Gold);
+	}
+
+
+
+
+
 	std::vector<std::uint16_t> indices;
 	indices.insert(indices.end(), std::begin(box.GetIndices16()), std::end(box.GetIndices16()));
 	indices.insert(indices.end(), std::begin(grid.GetIndices16()), std::end(grid.GetIndices16()));
 	indices.insert(indices.end(), std::begin(sphere.GetIndices16()), std::end(sphere.GetIndices16()));
 	indices.insert(indices.end(), std::begin(cylinder.GetIndices16()), std::end(cylinder.GetIndices16()));
+
+
+	indices.insert(indices.end(), std::begin(cone.GetIndices16()), std::end(cone.GetIndices16()));
+	indices.insert(indices.end(), std::begin(Pyramid_flat_head.GetIndices16()), std::end(Pyramid_flat_head.GetIndices16()));
+	indices.insert(indices.end(), std::begin(Pyramid_pointed_head.GetIndices16()), std::end(Pyramid_pointed_head.GetIndices16()));
+	indices.insert(indices.end(), std::begin(wedge.GetIndices16()), std::end(wedge.GetIndices16()));
+	indices.insert(indices.end(), std::begin(pointed_cylinder.GetIndices16()), std::end(pointed_cylinder.GetIndices16()));
+
 
 	const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
 	const UINT ibByteSize = (UINT)indices.size() * sizeof(std::uint16_t);
@@ -669,6 +763,15 @@ void MyCastleApp::BuildShapeGeometry()
 	geo->DrawArgs["grid"] = gridSubmesh;
 	geo->DrawArgs["sphere"] = sphereSubmesh;
 	geo->DrawArgs["cylinder"] = cylinderSubmesh;
+
+
+
+	geo->DrawArgs["cone"] = coneSubmesh;
+	geo->DrawArgs["Pyramid_flat_head"] = Pyramid_flat_headSubmesh;
+	geo->DrawArgs["Pyramid_pointed_head"] = Pyramid_pointed_headSubmesh;
+	geo->DrawArgs["wedge"] = wedgeSubmesh;
+	geo->DrawArgs["pointed_cylinder"] = pointed_cylinderSubmesh;
+	geo->DrawArgs["TriangularPrism"] = boxSubmesh;
 
 	mGeometries[geo->Name] = std::move(geo);
 }

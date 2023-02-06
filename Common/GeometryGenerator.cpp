@@ -718,11 +718,9 @@ GeometryGenerator::MeshData GeometryGenerator::CreateQuad(float x, float y, floa
 /// build new 3D shapes
 /// </summary>
 /// 
-GeometryGenerator::MeshData GeometryGenerator::CreateCone(float bottomRadius, float height, uint32 sliceCount,
-	uint32 stackCount)
+GeometryGenerator::MeshData GeometryGenerator::CreateCone(float bottomRadius, float height, uint32 sliceCount, uint32 stackCount)
 {
-	//Create cylinder with top =0, which is a point
-	return CreateCylinder(bottomRadius, 0.0f, height, sliceCount, stackCount);
+	return CreateCylinder(bottomRadius, 0.01f, height, sliceCount, stackCount);
 }
 
 GeometryGenerator::MeshData GeometryGenerator::CreatePyramid_flat_head(float bottomEdge, float topEdge, float height,
@@ -790,7 +788,7 @@ GeometryGenerator::MeshData GeometryGenerator::CreatePyramid_flat_head(float bot
 	return meshData;
 }
 
-GeometryGenerator::MeshData GeometryGenerator::Createpointed_cylinder(float bottomEdge, float height, uint32 numSubdivisions)
+GeometryGenerator::MeshData GeometryGenerator::CreatePyramid_pointed_head(float bottomEdge, float height, uint32 numSubdivisions)
 {
 	MeshData meshData;
 
@@ -925,6 +923,9 @@ GeometryGenerator::MeshData GeometryGenerator::Createpointed_cylinder(float widt
 {
 	return CreateCone(width / 2, height, 3, stackCount);
 }
+
+
+
 
 
 
