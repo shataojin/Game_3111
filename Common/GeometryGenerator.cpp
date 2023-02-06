@@ -612,6 +612,63 @@ GeometryGenerator::MeshData GeometryGenerator::CreateGrid(float width, float dep
 
     return meshData;
 }
+GeometryGenerator::MeshData GeometryGenerator::CreateSquarePyramid(float bottomEdge, float height,
+	uint32 numSubdivisions)
+{
+	MeshData meshData;
+
+	//
+	// Create the vertices.
+	//
+
+	Vertex v[5];
+	float w2 = bottomEdge * 0.5f;
+	float h2 = 0.5f * height;
+	
+
+	auto t1 = XMFLOAT3(w2, -h2, w2);
+	auto t2 = XMFLOAT3(w2, -h2, -w2);
+	auto t3 = XMFLOAT3(-w2, -h2, -w2);
+	auto t4 = XMFLOAT3(-w2, -h2, w2);
+
+	auto h = XMFLOAT3(0, h2, 0);
+
+
+	// Fill in the four vertex data.
+	v[0].Position = t1;
+	v[1].Position = t2;
+	v[2].Position = t3;
+	v[3].Position = t4;
+	v[4].Position = h;
+
+	meshData.Vertices.assign(&v[0], &v[5]);
+
+	//
+	// Create the indices.
+	//
+
+	uint32 i[18];
+
+	// Fill in the bottom face index data
+	i[0] = 1; i[1] = 0; i[2] = 2;
+	i[3] = 0; i[4] = 3; i[5] = 2;
+
+	// Fill in the side face index data
+	i[6] = 1; i[7] = 2; i[8] = 4;
+	i[9] = 2; i[10] = 3; i[11] = 4;
+	i[12] = 0; i[13] = 4; i[14] = 3;
+	i[15] = 0; i[16] = 1; i[17] = 4;
+
+	meshData.Indices32.assign(&i[0], &i[18]);
+
+	// Put a cap on the number of subdivisions.
+	numSubdivisions = std::min<uint32>(numSubdivisions, 6u);
+
+	for (uint32 i = 0; i < numSubdivisions; ++i)
+		Subdivide(meshData);
+
+	return meshData;
+}
 
 GeometryGenerator::MeshData GeometryGenerator::CreateQuad(float x, float y, float w, float h, float depth)
 {
@@ -655,3 +712,83 @@ GeometryGenerator::MeshData GeometryGenerator::CreateQuad(float x, float y, floa
 
     return meshData;
 }
+
+
+/// <summary>
+/// build new 3D shapes
+/// </summary>
+/// 
+GeometryGenerator::MeshData GeometryGenerator::CreateCone(float bottomRadius, float height, uint32 sliceCount,
+	uint32 stackCount)
+{
+	return CreateCylinder(bottomRadius, 0.0f, height, sliceCount, stackCount);
+	//cylinder without top
+}
+
+GeometryGenerator::MeshData GeometryGenerator::CreatePyramidtriangular(float bottomEdge, float topEdge, float height,
+	uint32 numSubdivisions)
+{
+	MeshData meshData;
+
+	//
+	// Create the vertices.
+	//
+
+	Vertex v[6];
+	float f = sqrtf(5.0f) / 5.0f;
+	float h2 = 0.6f * height;
+
+	auto b1 = XMFLOAT3(0, -h2, bottomEdge * f);
+	auto b2 = XMFLOAT3(-0.5f * bottomEdge, -h2, -0.5f * bottomEdge * f);
+	auto b3 = XMFLOAT3(0.5f * bottomEdge, -h2, -0.5f * bottomEdge * f);
+
+	auto t1 = XMFLOAT3(0, h2, topEdge * f);
+	auto t2 = XMFLOAT3(-0.5f * topEdge, h2, -0.5f * topEdge * f);
+	auto t3 = XMFLOAT3(0.5f * topEdge, h2, -0.5f * topEdge * f);
+
+
+	// Fill in the four vertex data.
+	v[0].Position = b1;
+	v[1].Position = b2;
+	v[2].Position = b3;
+	v[3].Position = t1;
+	v[4].Position = t2;
+	v[5].Position = t3;
+
+	meshData.Vertices.assign(&v[0], &v[6]);
+
+	//
+	// Create the indices.
+	//
+
+	uint32 i[24];
+
+	// Fill in the bottom face index data
+	i[0] = 0; i[1] = 1; i[2] = 2;
+
+	// Fill in the top face index data
+	i[3] = 3; i[4] = 5; i[5] = 4;
+
+	// Fill in the side face index data
+	i[6] = 0; i[7] = 3; i[8] = 4;
+	i[9] = 0; i[10] = 4; i[11] = 1;
+
+	i[12] = 1; i[13] = 4; i[14] = 2;
+	i[15] = 2; i[16] = 4; i[17] = 5;
+
+	i[18] = 2; i[19] = 5; i[20] = 0;
+	i[21] = 0; i[22] = 5; i[23] = 3;
+
+	meshData.Indices32.assign(&i[0], &i[24]);
+
+	// Put a cap on the number of subdivisions.
+	numSubdivisions = std::min<uint32>(numSubdivisions, 6u);
+
+	for (uint32 i = 0; i < numSubdivisions; ++i)
+		Subdivide(meshData);
+
+	return meshData;
+}
+
+
+
