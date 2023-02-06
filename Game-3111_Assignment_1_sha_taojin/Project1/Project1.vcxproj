@@ -27,7 +27,7 @@
     <ClCompile Include="..\..\Common\GeometryGenerator.cpp" />
     <ClCompile Include="..\..\Common\MathHelper.cpp" />
     <ClCompile Include="FrameResource.cpp" />
-    <ClCompile Include="Week4-6-ShapeComplete.cpp" />
+    <ClCompile Include="Game-3111_A1_Sha_taojin.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Common\Camera.h" />

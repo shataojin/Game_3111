@@ -39,7 +39,7 @@
     <ClCompile Include="FrameResource.cpp">
       <Filter>资源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Week4-6-ShapeComplete.cpp">
+    <ClCompile Include="Game-3111_A1_Sha_taojin.cpp">
       <Filter>资源文件</Filter>
     </ClCompile>
   </ItemGroup>
