@@ -751,7 +751,7 @@ void TreeBillboardsApp::BuildDescriptorHeaps()
 	srvDesc.Format = checkboardTex->GetDesc().Format;
 	md3dDevice->CreateShaderResourceView(checkboardTex.Get(), &srvDesc, hDescriptor);
 
-	
+
 
 	// next descriptor
 	hDescriptor.Offset(1, mCbvSrvDescriptorSize);
@@ -921,20 +921,174 @@ void TreeBillboardsApp::BuildWavesGeometry()
 void TreeBillboardsApp::BuildBoxGeometry()
 {
 	GeometryGenerator geoGen;
-	GeometryGenerator::MeshData box = geoGen.CreateBox(8.0f, 8.0f, 8.0f, 3);
+	GeometryGenerator::MeshData box = geoGen.CreateBox(1.0f, 1.0f, 1.0f, 0);//box
+	GeometryGenerator::MeshData sphere = geoGen.CreateSphere(0.5f, 20, 20);//ball
+	GeometryGenerator::MeshData cylinder = geoGen.CreateCylinder(0.5f, 0.3f, 3.0f, 20, 20);//Cylinder
+	GeometryGenerator::MeshData cone = geoGen.CreateCone(0.5f, 1.0f, 20, 20);
+	GeometryGenerator::MeshData Pyramid_flat_head = geoGen.CreatePyramid_flat_head(1.5f, 2.0f, 1.0f, 0);
+	GeometryGenerator::MeshData Pyramid_pointed_head = geoGen.CreatePyramid_pointed_head(1.5f, 0.5f, 0);
+	GeometryGenerator::MeshData wedge = geoGen.CreateWedge(1.0, 1.0f, 1.0, 3);
+	GeometryGenerator::MeshData pointed_cylinder = geoGen.Createpointed_cylinder(5.0f, 5.0f, 1);
 
-	std::vector<Vertex> vertices(box.Vertices.size());
-	for (size_t i = 0; i < box.Vertices.size(); ++i)
+
+	// Vertex Cache
+	UINT boxVertexOffset = 0;
+	UINT sphereVertexOffset = boxVertexOffset + (UINT)box.Vertices.size();
+	UINT cylinderVertexOffset = sphereVertexOffset + (UINT)sphere.Vertices.size();
+	UINT coneVertexOffset = cylinderVertexOffset + (UINT)cylinder.Vertices.size();
+	UINT Pyramid_flat_headVertexOffset = coneVertexOffset + (UINT)cone.Vertices.size();
+	UINT Pyramid_pointed_headVertexOffset = Pyramid_flat_headVertexOffset + (UINT)Pyramid_flat_head.Vertices.size();
+	UINT wedgeVertexOffset = Pyramid_pointed_headVertexOffset + (UINT)Pyramid_pointed_head.Vertices.size();
+	UINT pointed_cylinderVertexOffset = wedgeVertexOffset + (UINT)wedge.Vertices.size();
+	
+
+
+	//Index Cache
+	UINT boxIndexOffset = 0;
+	UINT sphereIndexOffset = boxIndexOffset + (UINT)box.Indices32.size();
+	UINT cylinderIndexOffset = sphereIndexOffset + (UINT)sphere.Indices32.size();
+	UINT coneIndexOffset = cylinderIndexOffset + (UINT)cylinder.Indices32.size();
+	UINT Pyramid_flat_headIndexOffset = coneIndexOffset + (UINT)cone.Indices32.size();
+	UINT Pyramid_pointed_headIndexOffset = Pyramid_flat_headIndexOffset + (UINT)Pyramid_flat_head.Indices32.size();
+	UINT wedgeIndexOffset = Pyramid_pointed_headIndexOffset + (UINT)Pyramid_pointed_head.Indices32.size();
+	UINT pointed_cylinderIndexOffset = wedgeIndexOffset + (UINT)wedge.Indices32.size();
+	UINT gateIndexOffset = pointed_cylinderIndexOffset + (UINT)pointed_cylinder.Indices32.size();
+
+	SubmeshGeometry boxSubmesh;
+	boxSubmesh.IndexCount = (UINT)box.Indices32.size();
+	boxSubmesh.StartIndexLocation = boxIndexOffset;
+	boxSubmesh.BaseVertexLocation = boxVertexOffset;
+
+	SubmeshGeometry sphereSubmesh;
+	sphereSubmesh.IndexCount = (UINT)sphere.Indices32.size();
+	sphereSubmesh.StartIndexLocation = sphereIndexOffset;
+	sphereSubmesh.BaseVertexLocation = sphereVertexOffset;
+
+	SubmeshGeometry cylinderSubmesh;
+	cylinderSubmesh.IndexCount = (UINT)cylinder.Indices32.size();
+	cylinderSubmesh.StartIndexLocation = cylinderIndexOffset;
+	cylinderSubmesh.BaseVertexLocation = cylinderVertexOffset;
+
+	SubmeshGeometry coneSubmesh;
+	coneSubmesh.IndexCount = (UINT)cone.Indices32.size();
+	coneSubmesh.StartIndexLocation = coneIndexOffset;
+	coneSubmesh.BaseVertexLocation = coneVertexOffset;
+
+	SubmeshGeometry Pyramid_flat_headSubmesh;
+	Pyramid_flat_headSubmesh.IndexCount = (UINT)Pyramid_flat_head.Indices32.size();
+	Pyramid_flat_headSubmesh.StartIndexLocation = Pyramid_flat_headIndexOffset;
+	Pyramid_flat_headSubmesh.BaseVertexLocation = Pyramid_flat_headVertexOffset;
+
+	SubmeshGeometry Pyramid_pointed_headSubmesh;
+	Pyramid_pointed_headSubmesh.IndexCount = (UINT)Pyramid_pointed_head.Indices32.size();
+	Pyramid_pointed_headSubmesh.StartIndexLocation = Pyramid_pointed_headIndexOffset;
+	Pyramid_pointed_headSubmesh.BaseVertexLocation = Pyramid_pointed_headVertexOffset;
+
+	SubmeshGeometry wedgeSubmesh;
+	wedgeSubmesh.IndexCount = (UINT)wedge.Indices32.size();
+	wedgeSubmesh.StartIndexLocation = wedgeIndexOffset;
+	wedgeSubmesh.BaseVertexLocation = wedgeVertexOffset;
+
+	SubmeshGeometry pointed_cylinderSubmesh;
+	pointed_cylinderSubmesh.IndexCount = (UINT)pointed_cylinder.Indices32.size();
+	pointed_cylinderSubmesh.StartIndexLocation = pointed_cylinderIndexOffset;
+	pointed_cylinderSubmesh.BaseVertexLocation = pointed_cylinderVertexOffset;
+
+
+	auto totalVertexCount =
+		box.Vertices.size() +
+		sphere.Vertices.size() +
+		cylinder.Vertices.size() +
+		cone.Vertices.size() +
+		Pyramid_flat_head.Vertices.size() +
+		Pyramid_pointed_head.Vertices.size() +
+		wedge.Vertices.size() +
+		pointed_cylinder.Vertices.size()
+		;
+
+
+	std::vector<Vertex> vertices(totalVertexCount);
+
+	UINT k = 0;
+	for (size_t i = 0; i < box.Vertices.size(); ++i, ++k)
 	{
 		auto& p = box.Vertices[i].Position;
-		vertices[i].Pos = p;
-		vertices[i].Normal = box.Vertices[i].Normal;
-		vertices[i].TexC = box.Vertices[i].TexC;
+		vertices[k].Pos = p;
+		vertices[k].Normal = box.Vertices[i].Normal;
+		vertices[k].TexC = box.Vertices[i].TexC;
 	}
+	for (size_t i = 0; i < sphere.Vertices.size(); ++i, ++k)
+	{
+		vertices[k].Pos = sphere.Vertices[i].Position;
+		vertices[k].Normal = sphere.Vertices[i].Normal;
+		vertices[k].TexC = sphere.Vertices[i].TexC;
+	}
+
+	for (size_t i = 0; i < cylinder.Vertices.size(); ++i, ++k)
+	{
+		vertices[k].Pos = cylinder.Vertices[i].Position;
+		vertices[k].Normal = cylinder.Vertices[i].Normal;
+		vertices[k].TexC = cylinder.Vertices[i].TexC;
+		
+	}
+	for (size_t i = 0; i < cone.Vertices.size(); ++i, ++k)
+	{
+		vertices[k].Pos = cone.Vertices[i].Position;
+		vertices[k].Normal = cone.Vertices[i].Normal;
+		vertices[k].TexC = cone.Vertices[i].TexC;
+		
+	}
+	
+	for (size_t i = 0; i < wedge.Vertices.size(); ++i, ++k)
+	{
+		vertices[k].Pos = wedge.Vertices[i].Position;
+		vertices[k].Normal = wedge.Vertices[i].Normal;
+		vertices[k].TexC = wedge.Vertices[i].TexC;
+		
+	}
+
+	for (size_t i = 0; i < Pyramid_flat_head.Vertices.size(); ++i, ++k)
+	{
+		vertices[k].Pos = Pyramid_flat_head.Vertices[i].Position;
+		vertices[k].Normal = Pyramid_flat_head.Vertices[i].Normal;
+		vertices[k].TexC = Pyramid_flat_head.Vertices[i].TexC;
+	}
+	for (size_t i = 0; i < Pyramid_pointed_head.Vertices.size(); ++i, ++k)
+	{
+		vertices[k].Pos = Pyramid_pointed_head.Vertices[i].Position;
+		vertices[k].Normal = Pyramid_flat_head.Vertices[i].Normal;
+		vertices[k].TexC = Pyramid_flat_head.Vertices[i].TexC;
+	}
+
+	for (size_t i = 0; i < pointed_cylinder.Vertices.size(); ++i, ++k)
+	{
+		vertices[k].Pos = pointed_cylinder.Vertices[i].Position;
+		vertices[k].Normal = pointed_cylinder.Vertices[i].Normal;
+		vertices[k].TexC = pointed_cylinder.Vertices[i].TexC;
+	}
+
+	
+
+
+
+
+
+
+	std::vector<std::uint16_t> indices;
+	indices.insert(indices.end(), std::begin(box.GetIndices16()), std::end(box.GetIndices16()));
+	indices.insert(indices.end(), std::begin(sphere.GetIndices16()), std::end(sphere.GetIndices16()));
+	indices.insert(indices.end(), std::begin(cylinder.GetIndices16()), std::end(cylinder.GetIndices16()));
+	indices.insert(indices.end(), std::begin(cone.GetIndices16()), std::end(cone.GetIndices16()));
+	indices.insert(indices.end(), std::begin(Pyramid_flat_head.GetIndices16()), std::end(Pyramid_flat_head.GetIndices16()));
+	indices.insert(indices.end(), std::begin(Pyramid_pointed_head.GetIndices16()), std::end(Pyramid_pointed_head.GetIndices16()));
+	indices.insert(indices.end(), std::begin(wedge.GetIndices16()), std::end(wedge.GetIndices16()));
+	indices.insert(indices.end(), std::begin(pointed_cylinder.GetIndices16()), std::end(pointed_cylinder.GetIndices16()));
+	
+
 
 	const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
 
-	std::vector<std::uint16_t> indices = box.GetIndices16();
+
 	const UINT ibByteSize = (UINT)indices.size() * sizeof(std::uint16_t);
 
 	auto geo = std::make_unique<MeshGeometry>();
@@ -957,14 +1111,22 @@ void TreeBillboardsApp::BuildBoxGeometry()
 	geo->IndexFormat = DXGI_FORMAT_R16_UINT;
 	geo->IndexBufferByteSize = ibByteSize;
 
-	SubmeshGeometry submesh;
-	submesh.IndexCount = (UINT)indices.size();
-	submesh.StartIndexLocation = 0;
-	submesh.BaseVertexLocation = 0;
+	//SubmeshGeometry submesh;
+	//submesh.IndexCount = (UINT)indices.size();
+	//submesh.StartIndexLocation = 0;
+	//submesh.BaseVertexLocation = 0; 
 
-	geo->DrawArgs["box"] = submesh;
+	geo->DrawArgs["box"] = boxSubmesh;
+	geo->DrawArgs["sphere"] = sphereSubmesh;
+	geo->DrawArgs["cylinder"] = cylinderSubmesh;
+	geo->DrawArgs["cone"] = coneSubmesh;
+	geo->DrawArgs["Pyramid_flat_head"] = Pyramid_flat_headSubmesh;
+	geo->DrawArgs["Pyramid_pointed_head"] = Pyramid_pointed_headSubmesh;
+	geo->DrawArgs["wedge"] = wedgeSubmesh;
+	geo->DrawArgs["pointed_cylinder"] = pointed_cylinderSubmesh;
 
-	mGeometries["boxGeo"] = std::move(geo);
+
+	mGeometries[geo->Name] = std::move(geo);
 }
 
 void TreeBillboardsApp::BuildTreeSpritesGeometry()
