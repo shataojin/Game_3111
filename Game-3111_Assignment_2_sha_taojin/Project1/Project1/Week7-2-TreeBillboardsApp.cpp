@@ -504,6 +504,11 @@ void TreeBillboardsApp::UpdateMainPassCB(const GameTimer& gt)
 	mMainPassCB.Lights[2].Direction = { 0.0f, -0.707f, -0.707f };
 	mMainPassCB.Lights[2].Strength = { 0.15f, 0.15f, 0.15f };
 
+	//A2 added light
+
+
+
+
 	auto currPassCB = mCurrFrameResource->PassCB.get();
 	currPassCB->CopyData(0, mMainPassCB);
 }
@@ -550,6 +555,7 @@ void TreeBillboardsApp::UpdateWaves(const GameTimer& gt)
 
 void TreeBillboardsApp::LoadTextures()
 {
+	//A2
 	auto grassTex = std::make_unique<Texture>();
 	grassTex->Name = "grassTex";
 	grassTex->Filename = L"../../Textures/grass.dds";
@@ -578,10 +584,53 @@ void TreeBillboardsApp::LoadTextures()
 		mCommandList.Get(), treeArrayTex->Filename.c_str(),
 		treeArrayTex->Resource, treeArrayTex->UploadHeap));
 
+
+	auto bricksTex = std::make_unique<Texture>();
+	bricksTex->Name = "bricksTex";
+	bricksTex->Filename = L"../../Textures/bricks.dds";
+	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(),
+		mCommandList.Get(), bricksTex->Filename.c_str(),
+		bricksTex->Resource, bricksTex->UploadHeap));
+
+	auto testcolorTex = std::make_unique<Texture>();
+	testcolorTex->Name = "testcolorTex";
+	testcolorTex->Filename = L"../../Textures/testcolor.dds";
+	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(),
+		mCommandList.Get(), testcolorTex->Filename.c_str(),
+		testcolorTex->Resource, testcolorTex->UploadHeap));
+
+	auto doorTex = std::make_unique<Texture>();
+	doorTex->Name = "doorTex";
+	doorTex->Filename = L"../../Textures/door.dds";
+	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(),
+		mCommandList.Get(), doorTex->Filename.c_str(),
+		doorTex->Resource, doorTex->UploadHeap));
+
+	auto wallsTex = std::make_unique<Texture>();
+	wallsTex->Name = "wallsTex";
+	wallsTex->Filename = L"../../Textures/walls.dds";
+	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(),
+		mCommandList.Get(), wallsTex->Filename.c_str(),
+		wallsTex->Resource, wallsTex->UploadHeap));
+
+	auto checkboardTex = std::make_unique<Texture>();
+	checkboardTex->Name = "checkboardTex";
+	checkboardTex->Filename = L"../../Textures/checkboard.dds";
+	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(),
+		mCommandList.Get(), checkboardTex->Filename.c_str(),
+		checkboardTex->Resource, checkboardTex->UploadHeap));
+
+
+
 	mTextures[grassTex->Name] = std::move(grassTex);
 	mTextures[waterTex->Name] = std::move(waterTex);
 	mTextures[fenceTex->Name] = std::move(fenceTex);
 	mTextures[treeArrayTex->Name] = std::move(treeArrayTex);
+	mTextures[bricksTex->Name] = std::move(bricksTex);
+	mTextures[testcolorTex->Name] = std::move(testcolorTex);
+	mTextures[doorTex->Name] = std::move(doorTex);
+	mTextures[wallsTex->Name] = std::move(wallsTex);
+	mTextures[checkboardTex->Name] = std::move(checkboardTex);
 }
 
 void TreeBillboardsApp::BuildRootSignature()
@@ -639,11 +688,16 @@ void TreeBillboardsApp::BuildDescriptorHeaps()
 	// Fill out the heap with actual descriptors.
 	//
 	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-
+	//A2
 	auto grassTex = mTextures["grassTex"]->Resource;
 	auto waterTex = mTextures["waterTex"]->Resource;
 	auto fenceTex = mTextures["fenceTex"]->Resource;
 	auto treeArrayTex = mTextures["treeArrayTex"]->Resource;
+	auto bricksTex = mTextures["bricksTex"]->Resource;
+	auto testcolorTex = mTextures["testcolorTex"]->Resource;
+	auto doorTex = mTextures["doorTex"]->Resource;
+	auto wallsTex = mTextures["wallsTex"]->Resource;
+	auto checkboardTex = mTextures["checkboardTex"]->Resource;
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -667,6 +721,35 @@ void TreeBillboardsApp::BuildDescriptorHeaps()
 
 	// next descriptor
 	hDescriptor.Offset(1, mCbvSrvDescriptorSize);
+	
+	//A2
+
+	srvDesc.Format = bricksTex->GetDesc().Format;
+	md3dDevice->CreateShaderResourceView(bricksTex.Get(), &srvDesc, hDescriptor);
+
+	// next descriptor
+	hDescriptor.Offset(1, mCbvSrvDescriptorSize);
+	srvDesc.Format = testcolorTex->GetDesc().Format;
+	md3dDevice->CreateShaderResourceView(testcolorTex.Get(), &srvDesc, hDescriptor);
+
+	// next descriptor
+	hDescriptor.Offset(1, mCbvSrvDescriptorSize);
+	srvDesc.Format = doorTex->GetDesc().Format;
+	md3dDevice->CreateShaderResourceView(doorTex.Get(), &srvDesc, hDescriptor);
+
+	// next descriptor
+	hDescriptor.Offset(1, mCbvSrvDescriptorSize);
+	srvDesc.Format = wallsTex->GetDesc().Format;
+	md3dDevice->CreateShaderResourceView(wallsTex.Get(), &srvDesc, hDescriptor);
+
+	// next descriptor
+	hDescriptor.Offset(1, mCbvSrvDescriptorSize);
+	srvDesc.Format = checkboardTex->GetDesc().Format;
+	md3dDevice->CreateShaderResourceView(checkboardTex.Get(), &srvDesc, hDescriptor);
+
+	// next descriptor
+	hDescriptor.Offset(1, mCbvSrvDescriptorSize);
+	
 
 	auto desc = treeArrayTex->GetDesc();
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
@@ -732,7 +815,7 @@ void TreeBillboardsApp::BuildLandGeometry()
     {
         auto& p = grid.Vertices[i].Position;
         vertices[i].Pos = p;
-		vertices[i].Pos.y = 0.2;/*GetHillsHeight(p.x, p.z);*/
+		vertices[i].Pos.y = 0.5;/*GetHillsHeight(p.x, p.z);*/
         vertices[i].Normal = GetHillsNormal(p.x, p.z);
 		vertices[i].TexC = grid.Vertices[i].TexC;
     }
@@ -879,6 +962,7 @@ void TreeBillboardsApp::BuildBoxGeometry()
 
 void TreeBillboardsApp::BuildTreeSpritesGeometry()
 {
+	//A2
 	//step5
 	struct TreeSpriteVertex
 	{
