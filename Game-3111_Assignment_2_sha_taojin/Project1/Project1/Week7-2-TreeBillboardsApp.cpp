@@ -679,7 +679,7 @@ void TreeBillboardsApp::BuildDescriptorHeaps()
 	// Create the SRV heap.
 	//
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-	srvHeapDesc.NumDescriptors = 4;
+	srvHeapDesc.NumDescriptors = 9;
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSrvDescriptorHeap)));
@@ -729,6 +729,7 @@ void TreeBillboardsApp::BuildDescriptorHeaps()
 
 	// next descriptor
 	hDescriptor.Offset(1, mCbvSrvDescriptorSize);
+
 	srvDesc.Format = testcolorTex->GetDesc().Format;
 	md3dDevice->CreateShaderResourceView(testcolorTex.Get(), &srvDesc, hDescriptor);
 
@@ -803,27 +804,28 @@ void TreeBillboardsApp::BuildLandGeometry()
     GeometryGenerator geoGen;
 	//ground size and location
     GeometryGenerator::MeshData grid = geoGen.CreateGrid(120.0f, 120.0f, 50, 50);
+	
 
-    //
-    // Extract the vertex elements we are interested and apply the height function to
-    // each vertex.  In addition, color the vertices based on their height so we have
-    // sandy looking beaches, grassy low hills, and snow mountain peaks.
-    //
+	// Extract the vertex elements we are interested and apply the height function to
+	// each vertex.  In addition, color the vertices based on their height so we have
+	// sandy looking beaches, grassy low hills, and snow mountain peaks.
+	//
 
-    std::vector<Vertex> vertices(grid.Vertices.size());
-    for(size_t i = 0; i < grid.Vertices.size(); ++i)
-    {
-        auto& p = grid.Vertices[i].Position;
-        vertices[i].Pos = p;
+	std::vector<Vertex> vertices(grid.Vertices.size());
+	for (size_t i = 0; i < grid.Vertices.size(); ++i)
+	{
+		auto& p = grid.Vertices[i].Position;
+		vertices[i].Pos = p;
 		vertices[i].Pos.y = 0.5;/*GetHillsHeight(p.x, p.z);*/
-        vertices[i].Normal = GetHillsNormal(p.x, p.z);
+		vertices[i].Normal = GetHillsNormal(p.x, p.z);
 		vertices[i].TexC = grid.Vertices[i].TexC;
-    }
+	}
 
-    const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
 
-    std::vector<std::uint16_t> indices = grid.GetIndices16();
-    const UINT ibByteSize = (UINT)indices.size() * sizeof(std::uint16_t);
+	const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
+
+	std::vector<std::uint16_t> indices = grid.GetIndices16();
+	const UINT ibByteSize = (UINT)indices.size() * sizeof(std::uint16_t);
 
 	auto geo = std::make_unique<MeshGeometry>();
 	geo->Name = "landGeo";
@@ -910,56 +912,6 @@ void TreeBillboardsApp::BuildWavesGeometry()
 
 	mGeometries["waterGeo"] = std::move(geo);
 }
-
-void TreeBillboardsApp::BuildBoxGeometry()
-{
-	GeometryGenerator geoGen;
-	GeometryGenerator::MeshData box = geoGen.CreateBox(8.0f, 8.0f, 8.0f, 3);
-
-	std::vector<Vertex> vertices(box.Vertices.size());
-	for (size_t i = 0; i < box.Vertices.size(); ++i)
-	{
-		auto& p = box.Vertices[i].Position;
-		vertices[i].Pos = p;
-		vertices[i].Normal = box.Vertices[i].Normal;
-		vertices[i].TexC = box.Vertices[i].TexC;
-	}
-
-	const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
-
-	std::vector<std::uint16_t> indices = box.GetIndices16();
-	const UINT ibByteSize = (UINT)indices.size() * sizeof(std::uint16_t);
-
-	auto geo = std::make_unique<MeshGeometry>();
-	geo->Name = "boxGeo";
-
-	ThrowIfFailed(D3DCreateBlob(vbByteSize, &geo->VertexBufferCPU));
-	CopyMemory(geo->VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
-
-	ThrowIfFailed(D3DCreateBlob(ibByteSize, &geo->IndexBufferCPU));
-	CopyMemory(geo->IndexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
-
-	geo->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
-		mCommandList.Get(), vertices.data(), vbByteSize, geo->VertexBufferUploader);
-
-	geo->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
-		mCommandList.Get(), indices.data(), ibByteSize, geo->IndexBufferUploader);
-
-	geo->VertexByteStride = sizeof(Vertex);
-	geo->VertexBufferByteSize = vbByteSize;
-	geo->IndexFormat = DXGI_FORMAT_R16_UINT;
-	geo->IndexBufferByteSize = ibByteSize;
-
-	SubmeshGeometry submesh;
-	submesh.IndexCount = (UINT)indices.size();
-	submesh.StartIndexLocation = 0;
-	submesh.BaseVertexLocation = 0;
-
-	geo->DrawArgs["box"] = submesh;
-
-	mGeometries["boxGeo"] = std::move(geo);
-}
-
 void TreeBillboardsApp::BuildTreeSpritesGeometry()
 {
 	//A2
@@ -972,7 +924,7 @@ void TreeBillboardsApp::BuildTreeSpritesGeometry()
 
 	static const int treeCount = 20;
 	std::array<TreeSpriteVertex, 20> vertices;
-	for(UINT i = 0; i < treeCount; ++i)
+	for (UINT i = 0; i < treeCount; ++i)
 	{
 		float x = MathHelper::RandF(-40.0f, 40.0f);
 		float z = MathHelper::RandF(-50.0f, -40.0f);
@@ -980,13 +932,13 @@ void TreeBillboardsApp::BuildTreeSpritesGeometry()
 
 		// Move tree slightly above land height.
 		y = 9.5f;
-		if (i <=10)
+		if (i <= 10)
 		{
 			vertices[i].Pos = XMFLOAT3(x, y, z);
 			vertices[i].Size = XMFLOAT2(20.0f, 20.0f);
 		}
-		
-		else if(10<i<=20)
+
+		else if (10 < i && i <= 20)
 		{
 			vertices[i].Pos = XMFLOAT3(x, y, -z);
 			vertices[i].Size = XMFLOAT2(20.0f, 20.0f);
@@ -1032,6 +984,288 @@ void TreeBillboardsApp::BuildTreeSpritesGeometry()
 	geo->DrawArgs["points"] = submesh;
 
 	mGeometries["treeSpritesGeo"] = std::move(geo);
+}
+
+void TreeBillboardsApp::BuildBoxGeometry()
+{
+	GeometryGenerator geoGen;
+	//A2
+	//build each items size
+
+	GeometryGenerator::MeshData box = geoGen.CreateBox(1.0f, 1.0f, 1.0f, 0);//box
+	GeometryGenerator::MeshData grid = geoGen.CreateGrid(30.0f, 30.0f, 60, 40);//ground
+	GeometryGenerator::MeshData sphere = geoGen.CreateSphere(0.5f, 20, 20);//ball
+	GeometryGenerator::MeshData cylinder = geoGen.CreateCylinder(0.5f, 0.3f, 3.0f, 20, 20);//Cylinder
+
+	///<summary>
+	/// new 3d shapes build
+	///</summary>
+
+	GeometryGenerator::MeshData cone = geoGen.CreateCone(0.5f, 1.0f, 20, 20);
+	GeometryGenerator::MeshData Pyramid_flat_head = geoGen.CreatePyramid_flat_head(1.5f, 2.0f, 1.0f, 0);
+	GeometryGenerator::MeshData Pyramid_pointed_head = geoGen.CreatePyramid_pointed_head(1.5f, 0.5f, 0);
+	GeometryGenerator::MeshData wedge = geoGen.CreateWedge(1.0, 1.0f, 1.0, 3);
+	GeometryGenerator::MeshData pointed_cylinder = geoGen.Createpointed_cylinder(5.0f, 5.0f, 1);
+	GeometryGenerator::MeshData gate = geoGen.CreateBox(1.0f, 1.0f, 1.0f, 3);
+
+
+	// We are concatenating all the geometry into one big vertex/index buffer.  So
+	// define the regions in the buffer each submesh covers.
+
+	// Cache the vertex offsets to each object in the concatenated vertex buffer.
+	UINT boxVertexOffset = 0;
+	UINT gridVertexOffset = (UINT)box.Vertices.size();
+	UINT sphereVertexOffset = gridVertexOffset + (UINT)grid.Vertices.size();
+	UINT cylinderVertexOffset = sphereVertexOffset + (UINT)sphere.Vertices.size();
+
+
+	UINT coneVertexOffset = cylinderVertexOffset + (UINT)cylinder.Vertices.size();
+	UINT Pyramid_flat_headVertexOffset = coneVertexOffset + (UINT)cone.Vertices.size();
+	UINT Pyramid_pointed_headVertexOffset = Pyramid_flat_headVertexOffset + (UINT)Pyramid_flat_head.Vertices.size();
+	UINT wedgeVertexOffset = Pyramid_pointed_headVertexOffset + (UINT)Pyramid_pointed_head.Vertices.size();
+	UINT pointed_cylinderVertexOffset = wedgeVertexOffset + (UINT)wedge.Vertices.size();
+	UINT gateVertexOffset = pointed_cylinderVertexOffset + (UINT)pointed_cylinder.Vertices.size();
+
+
+	// Cache the starting index for each object in the concatenated index buffer.
+	UINT boxIndexOffset = 0;
+	UINT gridIndexOffset = (UINT)box.Indices32.size();
+	UINT sphereIndexOffset = gridIndexOffset + (UINT)grid.Indices32.size();
+	UINT cylinderIndexOffset = sphereIndexOffset + (UINT)sphere.Indices32.size();
+
+
+	UINT coneIndexOffset = cylinderIndexOffset + (UINT)cylinder.Indices32.size();
+	UINT Pyramid_flat_headIndexOffset = coneIndexOffset + (UINT)cone.Indices32.size();
+	UINT Pyramid_pointed_headIndexOffset = Pyramid_flat_headIndexOffset + (UINT)Pyramid_flat_head.Indices32.size();
+	UINT wedgeIndexOffset = Pyramid_pointed_headIndexOffset + (UINT)Pyramid_pointed_head.Indices32.size();
+	UINT pointed_cylinderIndexOffset = wedgeIndexOffset + (UINT)wedge.Indices32.size();
+	UINT gateIndexOffset = pointed_cylinderIndexOffset + (UINT)pointed_cylinder.Indices32.size();
+
+
+	// Define the SubmeshGeometry that cover different
+	// regions of the vertex/index buffers.
+
+	SubmeshGeometry boxSubmesh;
+	boxSubmesh.IndexCount = (UINT)box.Indices32.size();
+	boxSubmesh.StartIndexLocation = boxIndexOffset;
+	boxSubmesh.BaseVertexLocation = boxVertexOffset;
+
+	SubmeshGeometry gridSubmesh;
+	gridSubmesh.IndexCount = (UINT)grid.Indices32.size();
+	gridSubmesh.StartIndexLocation = gridIndexOffset;
+	gridSubmesh.BaseVertexLocation = gridVertexOffset;
+
+	SubmeshGeometry sphereSubmesh;
+	sphereSubmesh.IndexCount = (UINT)sphere.Indices32.size();
+	sphereSubmesh.StartIndexLocation = sphereIndexOffset;
+	sphereSubmesh.BaseVertexLocation = sphereVertexOffset;
+
+	SubmeshGeometry cylinderSubmesh;
+	cylinderSubmesh.IndexCount = (UINT)cylinder.Indices32.size();
+	cylinderSubmesh.StartIndexLocation = cylinderIndexOffset;
+	cylinderSubmesh.BaseVertexLocation = cylinderVertexOffset;
+
+
+
+
+	SubmeshGeometry coneSubmesh;
+	coneSubmesh.IndexCount = (UINT)cone.Indices32.size();
+	coneSubmesh.StartIndexLocation = coneIndexOffset;
+	coneSubmesh.BaseVertexLocation = coneVertexOffset;
+
+	SubmeshGeometry Pyramid_flat_headSubmesh;
+	Pyramid_flat_headSubmesh.IndexCount = (UINT)Pyramid_flat_head.Indices32.size();
+	Pyramid_flat_headSubmesh.StartIndexLocation = Pyramid_flat_headIndexOffset;
+	Pyramid_flat_headSubmesh.BaseVertexLocation = Pyramid_flat_headVertexOffset;
+
+	SubmeshGeometry Pyramid_pointed_headSubmesh;
+	Pyramid_pointed_headSubmesh.IndexCount = (UINT)Pyramid_pointed_head.Indices32.size();
+	Pyramid_pointed_headSubmesh.StartIndexLocation = Pyramid_pointed_headIndexOffset;
+	Pyramid_pointed_headSubmesh.BaseVertexLocation = Pyramid_pointed_headVertexOffset;
+
+	SubmeshGeometry wedgeSubmesh;
+	wedgeSubmesh.IndexCount = (UINT)wedge.Indices32.size();
+	wedgeSubmesh.StartIndexLocation = wedgeIndexOffset;
+	wedgeSubmesh.BaseVertexLocation = wedgeVertexOffset;
+
+	SubmeshGeometry pointed_cylinderSubmesh;
+	pointed_cylinderSubmesh.IndexCount = (UINT)pointed_cylinder.Indices32.size();
+	pointed_cylinderSubmesh.StartIndexLocation = pointed_cylinderIndexOffset;
+	pointed_cylinderSubmesh.BaseVertexLocation = pointed_cylinderVertexOffset;
+
+	SubmeshGeometry gateSubmesh;
+	gateSubmesh.IndexCount = (UINT)gate.Indices32.size();
+	gateSubmesh.StartIndexLocation = gateIndexOffset;
+	gateSubmesh.BaseVertexLocation = gateVertexOffset;
+
+
+
+	// Extract the vertex elements we are interested in and pack the
+	// vertices of all the meshes into one vertex buffer.
+
+	auto totalVertexCount =
+		box.Vertices.size() +
+		grid.Vertices.size() +
+		sphere.Vertices.size() +
+		cylinder.Vertices.size() +
+
+
+		cone.Vertices.size() +
+		Pyramid_flat_head.Vertices.size() +
+		Pyramid_pointed_head.Vertices.size() +
+		wedge.Vertices.size() +
+		gate.Vertices.size() +
+		pointed_cylinder.Vertices.size()
+		;
+
+	std::vector<Vertex> vertices(totalVertexCount);
+
+	UINT k = 0;
+
+	for (size_t i = 0; i < box.Vertices.size(); ++i, ++k)
+	{
+		vertices[k].Pos = box.Vertices[i].Position;
+		vertices[k].Normal = box.Vertices[i].Normal;
+		vertices[k].TexC = box.Vertices[i].TexC;
+		//vertices[k].Color = XMFLOAT4(DirectX::Colors::Gray);
+	}
+
+	for (size_t i = 0; i < grid.Vertices.size(); ++i, ++k)
+	{
+		vertices[k].Pos = grid.Vertices[i].Position;
+		vertices[k].Normal = grid.Vertices[i].Normal;
+		vertices[k].TexC = grid.Vertices[i].TexC;
+		//vertices[k].Color = XMFLOAT4(DirectX::Colors::ForestGreen);
+	}
+
+	for (size_t i = 0; i < sphere.Vertices.size(); ++i, ++k)
+	{
+		vertices[k].Pos = sphere.Vertices[i].Position;
+		vertices[k].Normal = sphere.Vertices[i].Normal;
+		vertices[k].TexC = sphere.Vertices[i].TexC;
+		//vertices[k].Color = XMFLOAT4(DirectX::Colors::Crimson);
+	}
+
+	for (size_t i = 0; i < cylinder.Vertices.size(); ++i, ++k)
+	{
+		vertices[k].Pos = cylinder.Vertices[i].Position;
+		vertices[k].Normal = cylinder.Vertices[i].Normal;
+		vertices[k].TexC = cylinder.Vertices[i].TexC;
+		//vertices[k].Color = XMFLOAT4(DirectX::Colors::SteelBlue);
+	}
+
+
+	for (size_t i = 0; i < cone.Vertices.size(); ++i, ++k)
+	{
+		vertices[k].Pos = cone.Vertices[i].Position;
+		vertices[k].Normal = cone.Vertices[i].Normal;
+		vertices[k].TexC = cone.Vertices[i].TexC;
+		//vertices[k].Color = XMFLOAT4(DirectX::Colors::Gold);
+	}
+	for (size_t i = 0; i < Pyramid_flat_head.Vertices.size(); ++i, ++k)
+	{
+		vertices[k].Pos = Pyramid_flat_head.Vertices[i].Position;
+		vertices[k].Normal = Pyramid_flat_head.Vertices[i].Normal;
+		vertices[k].TexC = Pyramid_flat_head.Vertices[i].TexC;
+		//vertices[k].Color = XMFLOAT4(DirectX::Colors::Red);
+	}
+	for (size_t i = 0; i < Pyramid_pointed_head.Vertices.size(); ++i, ++k)
+	{
+		vertices[k].Pos = Pyramid_pointed_head.Vertices[i].Position;
+		vertices[k].Normal = Pyramid_pointed_head.Vertices[i].Normal;
+		vertices[k].TexC = Pyramid_pointed_head.Vertices[i].TexC;
+		//vertices[k].Color = XMFLOAT4(DirectX::Colors::Tan);
+	}
+	for (size_t i = 0; i < wedge.Vertices.size(); ++i, ++k)
+	{
+		vertices[k].Pos = wedge.Vertices[i].Position;
+		vertices[k].Normal = wedge.Vertices[i].Normal;
+		vertices[k].TexC = wedge.Vertices[i].TexC;
+		//vertices[k].Color = XMFLOAT4(DirectX::Colors::Chocolate);
+	}
+	for (size_t i = 0; i < pointed_cylinder.Vertices.size(); ++i, ++k)
+	{
+		vertices[k].Pos = pointed_cylinder.Vertices[i].Position;
+		vertices[k].Normal = pointed_cylinder.Vertices[i].Normal;
+		vertices[k].TexC = pointed_cylinder.Vertices[i].TexC;
+		//vertices[k].Color = XMFLOAT4(DirectX::Colors::Pink);
+	}
+
+	for (size_t i = 0; i < gate.Vertices.size(); ++i, ++k)
+	{
+		vertices[k].Pos = gate.Vertices[i].Position;
+		vertices[k].Normal = gate.Vertices[i].Normal;
+		vertices[k].TexC = gate.Vertices[i].TexC;
+		//vertices[k].Color = XMFLOAT4(DirectX::Colors::Cyan);
+	}
+
+	
+
+
+
+
+	std::vector<std::uint16_t> indices;
+	indices.insert(indices.end(), std::begin(box.GetIndices16()), std::end(box.GetIndices16()));
+	indices.insert(indices.end(), std::begin(grid.GetIndices16()), std::end(grid.GetIndices16()));
+	indices.insert(indices.end(), std::begin(sphere.GetIndices16()), std::end(sphere.GetIndices16()));
+	indices.insert(indices.end(), std::begin(cylinder.GetIndices16()), std::end(cylinder.GetIndices16()));
+
+
+	indices.insert(indices.end(), std::begin(cone.GetIndices16()), std::end(cone.GetIndices16()));
+	indices.insert(indices.end(), std::begin(Pyramid_flat_head.GetIndices16()), std::end(Pyramid_flat_head.GetIndices16()));
+	indices.insert(indices.end(), std::begin(Pyramid_pointed_head.GetIndices16()), std::end(Pyramid_pointed_head.GetIndices16()));
+	indices.insert(indices.end(), std::begin(wedge.GetIndices16()), std::end(wedge.GetIndices16()));
+	indices.insert(indices.end(), std::begin(pointed_cylinder.GetIndices16()), std::end(pointed_cylinder.GetIndices16()));
+	indices.insert(indices.end(), std::begin(gate.GetIndices16()), std::end(gate.GetIndices16()));
+
+
+	const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
+	const UINT ibByteSize = (UINT)indices.size() * sizeof(std::uint16_t);
+
+	auto geo = std::make_unique<MeshGeometry>();
+	geo->Name = "shapeGeo";
+
+	ThrowIfFailed(D3DCreateBlob(vbByteSize, &geo->VertexBufferCPU));
+	CopyMemory(geo->VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
+
+	ThrowIfFailed(D3DCreateBlob(ibByteSize, &geo->IndexBufferCPU));
+	CopyMemory(geo->IndexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
+
+	geo->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
+		mCommandList.Get(), vertices.data(), vbByteSize, geo->VertexBufferUploader);
+
+	geo->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
+		mCommandList.Get(), indices.data(), ibByteSize, geo->IndexBufferUploader);
+
+	geo->VertexByteStride = sizeof(Vertex);
+	geo->VertexBufferByteSize = vbByteSize;
+	geo->IndexFormat = DXGI_FORMAT_R16_UINT;
+	geo->IndexBufferByteSize = ibByteSize;
+
+	/*SubmeshGeometry submesh;
+	submesh.IndexCount = (UINT)indices.size();
+	submesh.StartIndexLocation = 0;
+	submesh.BaseVertexLocation = 0;*/
+
+	//???may need change
+	geo->DrawArgs["box"] = boxSubmesh;
+	geo->DrawArgs["grid"] = gridSubmesh;
+	geo->DrawArgs["sphere"] = sphereSubmesh;
+	geo->DrawArgs["cylinder"] = cylinderSubmesh;
+
+
+
+	geo->DrawArgs["cone"] = coneSubmesh;
+	geo->DrawArgs["Pyramid_flat_head"] = Pyramid_flat_headSubmesh;
+	geo->DrawArgs["Pyramid_pointed_head"] = Pyramid_pointed_headSubmesh;
+	geo->DrawArgs["wedge"] = wedgeSubmesh;
+	geo->DrawArgs["pointed_cylinder"] = pointed_cylinderSubmesh;
+	geo->DrawArgs["gate"] = gateSubmesh;
+
+	mGeometries[geo->Name] = std::move(geo);
+
+	
+
 }
 
 void TreeBillboardsApp::BuildPSOs()
@@ -1179,6 +1413,13 @@ void TreeBillboardsApp::BuildMaterials()
 	treeSprites->FresnelR0 = XMFLOAT3(0.01f, 0.01f, 0.01f);
 	treeSprites->Roughness = 0.125f;
 
+	//A2
+
+
+
+
+
+
 	mMaterials["grass"] = std::move(grass);
 	mMaterials["water"] = std::move(water);
 	mMaterials["wirefence"] = std::move(wirefence);
@@ -1187,6 +1428,7 @@ void TreeBillboardsApp::BuildMaterials()
 
 void TreeBillboardsApp::BuildRenderItems()
 {
+	UINT objIndex = 0;
     auto wavesRitem = std::make_unique<RenderItem>();
     wavesRitem->World = MathHelper::Identity4x4();
 	XMStoreFloat4x4(&wavesRitem->TexTransform, XMMatrixScaling(5.0f, 5.0f, 1.0f));
@@ -1239,6 +1481,167 @@ void TreeBillboardsApp::BuildRenderItems()
 	treeSpritesRitem->BaseVertexLocation = treeSpritesRitem->Geo->DrawArgs["points"].BaseVertexLocation;
 
 	mRitemLayer[(int)RenderLayer::AlphaTestedTreeSprites].push_back(treeSpritesRitem.get());
+
+
+
+
+	// 4 tower
+	//each tower location
+	float dx[4] = { 7.0f,7.0f, -7.0f, -7.0f }, dz[4] = { 7.0f, -7.0f, -7.0f, 7.0f };
+	for (int i = 0; i < 4; ++i)
+	{
+
+		auto tower_base = std::make_unique<RenderItem>();
+		XMStoreFloat4x4(&tower_base->World, XMMatrixScaling(2.0f, 2.0f, 2.0f) * XMMatrixTranslation(dx[i], 2.0f, dz[i]));
+		tower_base->ObjCBIndex = objIndex++;
+		tower_base->Geo = mGeometries["shapeGeo"].get();
+		tower_base->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+		tower_base->IndexCount = tower_base->Geo->DrawArgs["cylinder"].IndexCount;
+		tower_base->StartIndexLocation = tower_base->Geo->DrawArgs["cylinder"].StartIndexLocation;
+		tower_base->BaseVertexLocation = tower_base->Geo->DrawArgs["cylinder"].BaseVertexLocation;
+		mAllRitems.push_back(std::move(tower_base));
+
+		auto tower_middle = std::make_unique<RenderItem>();
+
+		XMStoreFloat4x4(&tower_middle->World, XMMatrixScaling(2.0f, 1.0f, 2.0f) * XMMatrixTranslation(dx[i], 4.5f, dz[i]));
+		tower_middle->ObjCBIndex = objIndex++;
+		tower_middle->Geo = mGeometries["shapeGeo"].get();
+		tower_middle->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+		tower_middle->IndexCount = tower_middle->Geo->DrawArgs["Pyramid_flat_head"].IndexCount;
+		tower_middle->StartIndexLocation = tower_middle->Geo->DrawArgs["Pyramid_flat_head"].StartIndexLocation;
+		tower_middle->BaseVertexLocation = tower_middle->Geo->DrawArgs["Pyramid_flat_head"].BaseVertexLocation;
+		mAllRitems.push_back(std::move(tower_middle));
+
+		auto tower_top = std::make_unique<RenderItem>();
+		XMStoreFloat4x4(&tower_top->World, XMMatrixTranslation(dx[i], 6.0f, dz[i]));
+		tower_top->ObjCBIndex = objIndex++;
+		tower_top->Geo = mGeometries["shapeGeo"].get();
+		tower_top->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+		tower_top->IndexCount = tower_top->Geo->DrawArgs["cone"].IndexCount;
+		tower_top->StartIndexLocation = tower_top->Geo->DrawArgs["cone"].StartIndexLocation;
+		tower_top->BaseVertexLocation = tower_top->Geo->DrawArgs["cone"].BaseVertexLocation;
+		mAllRitems.push_back(std::move(tower_top));
+	}
+
+	//wall
+
+	auto wall_one = std::make_unique<RenderItem>();
+	XMStoreFloat4x4(&wall_one->World, XMMatrixScaling(14.0f, 3.0f, 1.5f) * XMMatrixTranslation(0.0, 1.0f, 7.0));
+	wall_one->ObjCBIndex = objIndex++;
+	wall_one->Geo = mGeometries["shapeGeo"].get();
+	wall_one->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	wall_one->IndexCount = wall_one->Geo->DrawArgs["box"].IndexCount;
+	wall_one->StartIndexLocation = wall_one->Geo->DrawArgs["box"].StartIndexLocation;
+	wall_one->BaseVertexLocation = wall_one->Geo->DrawArgs["box"].BaseVertexLocation;
+	mAllRitems.push_back(std::move(wall_one));
+
+	auto wall_two = std::make_unique<RenderItem>();
+	XMStoreFloat4x4(&wall_two->World, XMMatrixScaling(14.0f, 3.0f, 1.5f) * XMMatrixTranslation(0.0, 1.0f, -7.0));
+	wall_two->ObjCBIndex = objIndex++;
+	wall_two->Geo = mGeometries["shapeGeo"].get();
+	wall_two->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	wall_two->IndexCount = wall_two->Geo->DrawArgs["box"].IndexCount;
+	wall_two->StartIndexLocation = wall_two->Geo->DrawArgs["box"].StartIndexLocation;
+	wall_two->BaseVertexLocation = wall_two->Geo->DrawArgs["box"].BaseVertexLocation;
+	mAllRitems.push_back(std::move(wall_two));
+
+	auto wall_three = std::make_unique<RenderItem>();
+	XMStoreFloat4x4(&wall_three->World, XMMatrixScaling(14.0f, 3.0f, 1.5f) * XMMatrixRotationY(XM_PIDIV2) * XMMatrixTranslation(6.5f, 1.0f, 0.0));
+	wall_three->ObjCBIndex = objIndex++;
+	wall_three->Geo = mGeometries["shapeGeo"].get();
+	wall_three->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	wall_three->IndexCount = wall_three->Geo->DrawArgs["box"].IndexCount;
+	wall_three->StartIndexLocation = wall_three->Geo->DrawArgs["box"].StartIndexLocation;
+	wall_three->BaseVertexLocation = wall_three->Geo->DrawArgs["box"].BaseVertexLocation;
+	mAllRitems.push_back(std::move(wall_three));
+
+	auto wall_four = std::make_unique<RenderItem>();
+	XMStoreFloat4x4(&wall_four->World, XMMatrixScaling(14.0f, 3.0f, 1.5f) * XMMatrixRotationY(XM_PIDIV2) * XMMatrixTranslation(-6.5f, 1.0f, 0.0f));
+	wall_four->ObjCBIndex = objIndex++;
+	wall_four->Geo = mGeometries["shapeGeo"].get();
+	wall_four->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	wall_four->IndexCount = wall_four->Geo->DrawArgs["box"].IndexCount;
+	wall_four->StartIndexLocation = wall_four->Geo->DrawArgs["box"].StartIndexLocation;
+	wall_four->BaseVertexLocation = wall_four->Geo->DrawArgs["box"].BaseVertexLocation;
+	mAllRitems.push_back(std::move(wall_four));
+
+	//wall fence
+	float obj_loaction[4] = { -4.0f,-2.0f,2.0f,4.0f };
+
+	for (int i = 0; i < 4; ++i)
+	{
+		auto wall_obj_1 = std::make_unique<RenderItem>();
+		XMStoreFloat4x4(&wall_obj_1->World, XMMatrixTranslation(obj_loaction[i], 3.0f, 7.0f));
+		wall_obj_1->ObjCBIndex = objIndex++;
+		wall_obj_1->Geo = mGeometries["shapeGeo"].get();
+		wall_obj_1->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+		wall_obj_1->IndexCount = wall_obj_1->Geo->DrawArgs["wedge"].IndexCount;
+		wall_obj_1->StartIndexLocation = wall_obj_1->Geo->DrawArgs["wedge"].StartIndexLocation;
+		wall_obj_1->BaseVertexLocation = wall_obj_1->Geo->DrawArgs["wedge"].BaseVertexLocation;
+		mAllRitems.push_back(std::move(wall_obj_1));
+
+		auto wall_obj_2 = std::make_unique<RenderItem>();
+		XMStoreFloat4x4(&wall_obj_2->World, XMMatrixTranslation(obj_loaction[i], 3.0f, -7.0f));
+		wall_obj_2->ObjCBIndex = objIndex++;
+		wall_obj_2->Geo = mGeometries["shapeGeo"].get();
+		wall_obj_2->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+		wall_obj_2->IndexCount = wall_obj_2->Geo->DrawArgs["Pyramid_pointed_head"].IndexCount;
+		wall_obj_2->StartIndexLocation = wall_obj_2->Geo->DrawArgs["Pyramid_pointed_head"].StartIndexLocation;
+		wall_obj_2->BaseVertexLocation = wall_obj_2->Geo->DrawArgs["Pyramid_pointed_head"].BaseVertexLocation;
+		mAllRitems.push_back(std::move(wall_obj_2));
+
+		auto wall_obj_3 = std::make_unique<RenderItem>();
+		XMStoreFloat4x4(&wall_obj_3->World, XMMatrixScaling(0.5f, 1.0f, 1.0f) * XMMatrixTranslation(-7.0f, 3.0f, obj_loaction[i]));
+		wall_obj_3->ObjCBIndex = objIndex++;
+		wall_obj_3->Geo = mGeometries["shapeGeo"].get();
+		wall_obj_3->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+		wall_obj_3->IndexCount = wall_obj_3->Geo->DrawArgs["box"].IndexCount;
+		wall_obj_3->StartIndexLocation = wall_obj_3->Geo->DrawArgs["box"].StartIndexLocation;
+		wall_obj_3->BaseVertexLocation = wall_obj_3->Geo->DrawArgs["box"].BaseVertexLocation;
+		mAllRitems.push_back(std::move(wall_obj_3));
+
+		auto wall_obj_4 = std::make_unique<RenderItem>();
+		XMStoreFloat4x4(&wall_obj_4->World, XMMatrixScaling(0.5f, 1.0f, 1.0f) * XMMatrixTranslation(7.0f, 3.0f, obj_loaction[i]));
+		wall_obj_4->ObjCBIndex = objIndex++;
+		wall_obj_4->Geo = mGeometries["shapeGeo"].get();
+		wall_obj_4->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+		wall_obj_4->IndexCount = wall_obj_4->Geo->DrawArgs["box"].IndexCount;
+		wall_obj_4->StartIndexLocation = wall_obj_4->Geo->DrawArgs["box"].StartIndexLocation;
+		wall_obj_4->BaseVertexLocation = wall_obj_4->Geo->DrawArgs["box"].BaseVertexLocation;
+		mAllRitems.push_back(std::move(wall_obj_4));
+	}
+
+	auto base_building = std::make_unique<RenderItem>();
+	XMStoreFloat4x4(&base_building->World, XMMatrixScaling(0.5f, 1.5f, 0.5f) * XMMatrixScaling(7.5f, 1.5f, 7.5f));
+	base_building->ObjCBIndex = objIndex++;
+	base_building->Geo = mGeometries["shapeGeo"].get();
+	base_building->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	base_building->IndexCount = base_building->Geo->DrawArgs["pointed_cylinder"].IndexCount;
+	base_building->StartIndexLocation = base_building->Geo->DrawArgs["pointed_cylinder"].StartIndexLocation;
+	base_building->BaseVertexLocation = base_building->Geo->DrawArgs["pointed_cylinder"].BaseVertexLocation;
+	mAllRitems.push_back(std::move(base_building));
+
+	auto baseRitem = std::make_unique<RenderItem>();
+	XMStoreFloat4x4(&baseRitem->World, XMMatrixScaling(7.5f, 5.0f, 7.5f));
+	baseRitem->ObjCBIndex = objIndex++;
+	baseRitem->Geo = mGeometries["shapeGeo"].get();
+	baseRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	baseRitem->IndexCount = baseRitem->Geo->DrawArgs["sphere"].IndexCount;
+	baseRitem->StartIndexLocation = baseRitem->Geo->DrawArgs["sphere"].StartIndexLocation;
+	baseRitem->BaseVertexLocation = baseRitem->Geo->DrawArgs["sphere"].BaseVertexLocation;
+	mAllRitems.push_back(std::move(baseRitem));
+
+	auto gate = std::make_unique<RenderItem>();
+	XMStoreFloat4x4(&gate->World, XMMatrixScaling(4.0f, 2.0f, 2.0f) * XMMatrixTranslation(0.0, 1.0f, 7.0));
+	gate->ObjCBIndex = objIndex++;
+	gate->Geo = mGeometries["shapeGeo"].get();
+	gate->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	gate->IndexCount = gate->Geo->DrawArgs["gate"].IndexCount;
+	gate->StartIndexLocation = gate->Geo->DrawArgs["gate"].StartIndexLocation;
+	gate->BaseVertexLocation = gate->Geo->DrawArgs["gate"].BaseVertexLocation;
+	mAllRitems.push_back(std::move(gate));
+
+	
 
     mAllRitems.push_back(std::move(wavesRitem));
     mAllRitems.push_back(std::move(gridRitem));
