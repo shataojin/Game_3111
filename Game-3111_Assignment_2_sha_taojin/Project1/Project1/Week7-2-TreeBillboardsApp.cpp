@@ -583,8 +583,8 @@ void TreeBillboardsApp::LoadTextures()
 	iceTex->Name = "iceTex";
 	iceTex->Filename = L"../../Textures/ice.dds";
 	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(),
-		mCommandList.Get(), grassTex->Filename.c_str(),
-		grassTex->Resource, grassTex->UploadHeap));
+		mCommandList.Get(), iceTex->Filename.c_str(),
+		iceTex->Resource, iceTex->UploadHeap));
 
 	auto bricksTex = std::make_unique<Texture>();
 	bricksTex->Name = "bricksTex";
@@ -1339,19 +1339,87 @@ void TreeBillboardsApp::BuildMaterials()
 	wirefence->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	wirefence->FresnelR0 = XMFLOAT3(0.02f, 0.02f, 0.02f);
 	wirefence->Roughness = 0.25f;
+	/// <summary>
+	/// 
+	/// </summary>
+	auto ice = std::make_unique<Material>();
+	ice->Name = "ice";
+	ice->MatCBIndex = 3;
+	ice->DiffuseSrvHeapIndex = 3;
+	ice->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	ice->FresnelR0 = XMFLOAT3(0.02f, 0.02f, 0.02f);
+	ice->Roughness = 0.2f;
+
+	auto bricks = std::make_unique<Material>();
+	bricks->Name = "bricks";
+	bricks->MatCBIndex = 4;
+	bricks->DiffuseSrvHeapIndex = 4;
+	bricks->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	bricks->FresnelR0 = XMFLOAT3(0.02f, 0.02f, 0.02f);
+	bricks->Roughness = 0.9f;
+
 
 	auto treeSprites = std::make_unique<Material>();
 	treeSprites->Name = "treeSprites";
-	treeSprites->MatCBIndex = 3;
-	treeSprites->DiffuseSrvHeapIndex = 3;
+	treeSprites->MatCBIndex = 5;
+	treeSprites->DiffuseSrvHeapIndex = 5;
 	treeSprites->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	treeSprites->FresnelR0 = XMFLOAT3(0.01f, 0.01f, 0.01f);
 	treeSprites->Roughness = 0.125f;
 
+
+	auto checkboard = std::make_unique<Material>();
+	checkboard->Name = "checkboard";
+	checkboard->MatCBIndex = 6;
+	checkboard->DiffuseSrvHeapIndex = 6;
+	checkboard->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	checkboard->FresnelR0 = XMFLOAT3(0.02f, 0.02f, 0.02f);
+	checkboard->Roughness = 0.9f;
+
+
+	auto walls = std::make_unique<Material>();
+	walls->Name = "walls";
+	walls->MatCBIndex = 7;
+	walls->DiffuseSrvHeapIndex = 7;
+	walls->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	walls->FresnelR0 = XMFLOAT3(0.02f, 0.02f, 0.02f);
+	walls->Roughness = 0.9f;
+
+	auto door = std::make_unique<Material>();
+	door->Name = "door";
+	door->MatCBIndex = 8;
+	door->DiffuseSrvHeapIndex = 8;
+	door->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	door->FresnelR0 = XMFLOAT3(0.02f, 0.02f, 0.02f);
+	door->Roughness = 0.9f;
+
+	auto testcolor = std::make_unique<Material>();
+	testcolor->Name = "testcolor";
+	testcolor->MatCBIndex = 9;
+	testcolor->DiffuseSrvHeapIndex = 9;
+	testcolor->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	testcolor->FresnelR0 = XMFLOAT3(0.02f, 0.02f, 0.02f);
+	testcolor->Roughness = 0.9f;
+
+
+
+
+
+
+
+
 	mMaterials["grass"] = std::move(grass);
 	mMaterials["water"] = std::move(water);
 	mMaterials["wirefence"] = std::move(wirefence);
+	mMaterials["ice"] = std::move(ice);
+	mMaterials["bricks"] = std::move(bricks);
+	mMaterials["testcolor"] = std::move(testcolor);
+	mMaterials["door"] = std::move(door);
+	mMaterials["walls"] = std::move(walls);
+	mMaterials["checkboard"] = std::move(checkboard);
 	mMaterials["treeSprites"] = std::move(treeSprites);
+
+
 }
 
 void TreeBillboardsApp::BuildRenderItems()
@@ -1414,6 +1482,7 @@ void TreeBillboardsApp::BuildRenderItems()
 	mAllRitems.push_back(std::move(boxRitem));
 	mAllRitems.push_back(std::move(treeSpritesRitem));
 }
+
 
 void TreeBillboardsApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems)
 {
