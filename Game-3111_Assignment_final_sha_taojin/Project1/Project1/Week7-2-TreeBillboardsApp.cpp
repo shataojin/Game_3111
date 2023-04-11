@@ -251,6 +251,8 @@ void TreeBillboardsApp::OnResize()
 	XMStoreFloat4x4(&mProj, P);*/
 
 	mCamera.SetLens(0.25f * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
+
+	mCamera.SetPosition(-55.0f, 2.5f, -40.0f);
 }
 
 void TreeBillboardsApp::Update(const GameTimer& gt)
@@ -324,6 +326,8 @@ void TreeBillboardsApp::Draw(const GameTimer& gt)
 	mCommandList->SetPipelineState(mPSOs["transparent"].Get());
 	DrawRenderItems(mCommandList.Get(), mRitemLayer[(int)RenderLayer::Transparent]);
 
+
+
 	// Indicate a state transition on the resource usage.
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
@@ -346,6 +350,8 @@ void TreeBillboardsApp::Draw(const GameTimer& gt)
 	// Because we are on the GPU timeline, the new fence point won't be 
 	// set until the GPU finishes processing all the commands prior to this Signal().
 	mCommandQueue->Signal(mFence.Get(), mCurrentFence);
+
+
 }
 
 void TreeBillboardsApp::OnMouseDown(WPARAM btnState, int x, int y)
@@ -399,25 +405,33 @@ void TreeBillboardsApp::OnMouseMove(WPARAM btnState, int x, int y)
 void TreeBillboardsApp::OnKeyboardInput(const GameTimer& gt)
 {
 	if (GetAsyncKeyState('1') & 0x8000)
-		mIsWireframe = true;
-	else
-		mIsWireframe = false;
+	{
+		mCamera.SetPosition(0.0f,50.0f,0.0f);
+	}
 
 
 	XMVECTOR camera_pos = mCamera.GetPosition();
 	const float dt = gt.DeltaTime();
 	//GetAsyncKeyState returns a short (2 bytes)
 	if (GetAsyncKeyState('W') & 0x8000) //most significant bit (MSB) is 1 when key is pressed (1000 000 000 000)
+	{
 		mCamera.Walk(10.0f * dt);
+	}
 
 	if (GetAsyncKeyState('S') & 0x8000)
+	{
 		mCamera.Walk(-10.0f * dt);
+	}
 
 	if (GetAsyncKeyState('A') & 0x8000)
+	{
 		mCamera.Strafe(-10.0f * dt);
+	}
 
 	if (GetAsyncKeyState('D') & 0x8000)
+	{
 		mCamera.Strafe(10.0f * dt);
+	}
 
 	if (CheckCollision())
 	{
@@ -1558,14 +1572,17 @@ void TreeBillboardsApp::BuildRenderItems()
 
 	////////
 	///
-	///////
+	/////////
+	//whole buildig movie
+	float CX = 35.0f;
+	float CZ = 0.0f;
 
-	float dx[4] = { 30.0f,30.0f, -30.0f, -30.0f }, dz[4] = { 30.0f, -30.0f, -30.0f, 30.0f };
+	float dx[4] = { 15.0f+ CX,15.0f + CX, -15.0f + CX, -15.0f + CX }, dz[4] = { 15.0f+ CZ, -15.0f + CZ, -15.0f + CZ, 15.0f + CZ };
 	for (int i = 0; i < 4; ++i)
 	{
 
 		auto tower_base = std::make_unique<RenderItem>();
-		XMStoreFloat4x4(&tower_base->World, XMMatrixScaling(10.0f, 10.0f,10.0f) * XMMatrixTranslation(dx[i], 5.0f, dz[i]));
+		XMStoreFloat4x4(&tower_base->World, XMMatrixScaling(5.0f, 5.0f,5.0f) * XMMatrixTranslation(dx[i], 4.0f, dz[i]));
 		tower_base->ObjCBIndex = objIndex++;
 		tower_base->Mat = mMaterials["bricks"].get();
 		tower_base->Geo = mGeometries["boxGeo"].get();
@@ -1576,7 +1593,7 @@ void TreeBillboardsApp::BuildRenderItems()
 		mRitemLayer[(int)RenderLayer::AlphaTested].push_back(tower_base.get());
 
 		auto tower_middle = std::make_unique<RenderItem>();
-		XMStoreFloat4x4(&tower_middle->World, XMMatrixScaling(10.0f, 10.0f, 10.0f) * XMMatrixTranslation(dx[i], 20.0f, dz[i]));
+		XMStoreFloat4x4(&tower_middle->World, XMMatrixScaling(5.0f, 5.0f, 5.0f) * XMMatrixTranslation(dx[i], 10.0f, dz[i]));
 		tower_middle->ObjCBIndex = objIndex++;
 		tower_middle->Mat = mMaterials["wirefence"].get();
 		tower_middle->Geo = mGeometries["boxGeo"].get();
@@ -1587,7 +1604,7 @@ void TreeBillboardsApp::BuildRenderItems()
 		mRitemLayer[(int)RenderLayer::AlphaTested].push_back(tower_middle.get());
 
 		auto tower_top = std::make_unique<RenderItem>();
-		XMStoreFloat4x4(&tower_top->World, XMMatrixScaling(7.0f, 7.0f, 7.0f)*XMMatrixTranslation(dx[i], 25.0f, dz[i]));
+		XMStoreFloat4x4(&tower_top->World, XMMatrixScaling(3.5f, 3.5f, 3.5f)*XMMatrixTranslation(dx[i], 15.0f, dz[i]));
 		tower_top->ObjCBIndex = objIndex++;
 		tower_top->Mat = mMaterials["ice"].get();
 		tower_top->Geo = mGeometries["boxGeo"].get();
@@ -1604,7 +1621,8 @@ void TreeBillboardsApp::BuildRenderItems()
 
 
 	//wall fence
-	float obj_loaction[4] = { 30.0f,30.0f, -30.0f, -30.0f };
+	float CL_fence = 35.0f;
+	float obj_loaction[4] = { 30.0f/2,30.0f/2, -30.0f/2, -30.0f/2 };
 
 	for (int i = 0; i < 4; ++i)
 	{
@@ -1630,9 +1648,9 @@ void TreeBillboardsApp::BuildRenderItems()
 		wall_obj_2->StartIndexLocation = wall_obj_2->Geo->DrawArgs["Pyramid_pointed_head"].StartIndexLocation;
 		wall_obj_2->BaseVertexLocation = wall_obj_2->Geo->DrawArgs["Pyramid_pointed_head"].BaseVertexLocation;
 		mRitemLayer[(int)RenderLayer::AlphaTested].push_back(wall_obj_2.get());*/
-		
+
 		auto wall_obj_3 = std::make_unique<RenderItem>();
-		XMStoreFloat4x4(&wall_obj_3->World, XMMatrixScaling(4,4,4) * XMMatrixTranslation(-7.0f, 13.0f, obj_loaction[i]));
+		XMStoreFloat4x4(&wall_obj_3->World, XMMatrixScaling(2, 2, 2) * XMMatrixTranslation(-7.0f+ CL_fence, 8.0f, obj_loaction[i]));
 		wall_obj_3->ObjCBIndex = objIndex++;
 		wall_obj_3->Mat = mMaterials["wirefence"].get();
 		wall_obj_3->Geo = mGeometries["boxGeo"].get();
@@ -1643,7 +1661,7 @@ void TreeBillboardsApp::BuildRenderItems()
 		mRitemLayer[(int)RenderLayer::AlphaTested].push_back(wall_obj_3.get());
 
 		auto wall_obj_4 = std::make_unique<RenderItem>();
-		XMStoreFloat4x4(&wall_obj_4->World, XMMatrixScaling(4,4,4) * XMMatrixTranslation(7.0f, 13.0f, obj_loaction[i]));
+		XMStoreFloat4x4(&wall_obj_4->World, XMMatrixScaling(2, 2, 2) * XMMatrixTranslation(7.0f + CL_fence, 8.0f, obj_loaction[i]));
 		wall_obj_4->ObjCBIndex = objIndex++;
 		wall_obj_4->Mat = mMaterials["wirefence"].get();
 		wall_obj_4->Geo = mGeometries["boxGeo"].get();
@@ -1662,9 +1680,10 @@ void TreeBillboardsApp::BuildRenderItems()
 	}
 
 
+	float CL_wall = 35.0f;
 
 	auto wall_one = std::make_unique<RenderItem>();
-	XMStoreFloat4x4(&wall_one->World, XMMatrixScaling(60.0f, 15.0f, 5.0f) * XMMatrixTranslation(0.0, 5.0, 30.0));
+	XMStoreFloat4x4(&wall_one->World, XMMatrixScaling(30.0f, 7.0f, 3.0f) * XMMatrixTranslation(0.0+ CL_wall, 4.0, 15.0));
 	wall_one->ObjCBIndex = objIndex++;
 	wall_one->Mat = mMaterials["bricks"].get();
 	wall_one->Geo = mGeometries["boxGeo"].get();
@@ -1675,7 +1694,7 @@ void TreeBillboardsApp::BuildRenderItems()
 	mRitemLayer[(int)RenderLayer::AlphaTested].push_back(wall_one.get());
 
 	auto wall_two = std::make_unique<RenderItem>();
-	XMStoreFloat4x4(&wall_two->World, XMMatrixScaling(60.0f, 15.0f, 5.0f)* XMMatrixTranslation(0.0, 5.0, -30.0));
+	XMStoreFloat4x4(&wall_two->World, XMMatrixScaling(30.0f, 7.0f, 3.0f)* XMMatrixTranslation(0.0 + CL_wall, 4.0, -15.0));
 	wall_two->ObjCBIndex = objIndex++;
 	wall_two->Mat = mMaterials["bricks"].get();
 	wall_two->Geo = mGeometries["boxGeo"].get();
@@ -1686,7 +1705,7 @@ void TreeBillboardsApp::BuildRenderItems()
 	mRitemLayer[(int)RenderLayer::AlphaTested].push_back(wall_two.get());
 
 	auto wall_three = std::make_unique<RenderItem>();
-	XMStoreFloat4x4(&wall_three->World, XMMatrixScaling(60.0f, 15.0f, 5.0f)* XMMatrixRotationY(XM_PIDIV2) * XMMatrixTranslation(30.0f, 5.0f, 0.0));
+	XMStoreFloat4x4(&wall_three->World, XMMatrixScaling(30.0f, 7.0f, 3.0f)* XMMatrixRotationY(XM_PIDIV2) * XMMatrixTranslation(15.0f + CL_wall, 4.0f, 0.0));
 	wall_three->ObjCBIndex = objIndex++;
 	wall_three->Mat = mMaterials["bricks"].get();
 	wall_three->Geo = mGeometries["boxGeo"].get();
@@ -1697,7 +1716,7 @@ void TreeBillboardsApp::BuildRenderItems()
 	mRitemLayer[(int)RenderLayer::AlphaTested].push_back(wall_three.get());
 
 	auto wall_four = std::make_unique<RenderItem>();
-	XMStoreFloat4x4(&wall_four->World, XMMatrixScaling(60.0f, 15.0f, 5.0f)* XMMatrixRotationY(XM_PIDIV2) * XMMatrixTranslation(-30.0f, 5.0f, 0.0f));
+	XMStoreFloat4x4(&wall_four->World, XMMatrixScaling(30.0f, 7.0f, 3.0f)* XMMatrixRotationY(XM_PIDIV2) * XMMatrixTranslation(-15.0f + CL_wall, 4.0f, 0.0f));
 	wall_four->ObjCBIndex = objIndex++;
 	wall_four->Mat = mMaterials["bricks"].get();
 	wall_four->Geo = mGeometries["boxGeo"].get();
@@ -1709,7 +1728,7 @@ void TreeBillboardsApp::BuildRenderItems()
 
 
 	auto base_building = std::make_unique<RenderItem>();
-	XMStoreFloat4x4(&base_building->World, XMMatrixScaling(5, 5, 5)* XMMatrixTranslation(0.0f, 10.0f, 0.0f));
+	XMStoreFloat4x4(&base_building->World, XMMatrixScaling(5/2, 5/2, 5/2)* XMMatrixTranslation(0.0f+CL_wall, 5.0f, 0.0f));
 	base_building->ObjCBIndex = objIndex++;
 	base_building->Mat = mMaterials["testcolor"].get();
 	base_building->Geo = mGeometries["boxGeo"].get();
@@ -1720,7 +1739,7 @@ void TreeBillboardsApp::BuildRenderItems()
 	mRitemLayer[(int)RenderLayer::AlphaTested].push_back(base_building.get());
 
 	auto baseRitem = std::make_unique<RenderItem>();
-	XMStoreFloat4x4(&baseRitem->World, XMMatrixScaling(30.0f, 20.0f, 30.0f));
+	XMStoreFloat4x4(&baseRitem->World, XMMatrixScaling(15.0f, 10.0f, 15.0f)* XMMatrixTranslation(0.0f + CL_wall, 0.0f, 0.0f));
 	baseRitem->ObjCBIndex = objIndex++;
 	baseRitem->Mat = mMaterials["checkboard"].get();
 	baseRitem->Geo = mGeometries["boxGeo"].get();
@@ -1732,7 +1751,7 @@ void TreeBillboardsApp::BuildRenderItems()
 
 
 	auto gateRitem = std::make_unique<RenderItem>();
-	XMStoreFloat4x4(&gateRitem->World, XMMatrixScaling(6.0f, 10.0f, 15.0f) * XMMatrixTranslation(30.0, 5.0f, 0.0));
+	XMStoreFloat4x4(&gateRitem->World, XMMatrixScaling(4.0f, 5.0f, 12.0f) * XMMatrixTranslation(20.0, 3.0f, 0.0));
 	gateRitem->ObjCBIndex = objIndex++;
 	gateRitem->Mat = mMaterials["door"].get();
 	gateRitem->Geo = mGeometries["boxGeo"].get();
@@ -1744,21 +1763,28 @@ void TreeBillboardsApp::BuildRenderItems()
 
 
 	const std::vector<std::string> maze_data{
-	   "############ ##",
-	   "#     # #  #  #",
-	   "# ###      ## #",
-	   "### # # ##    #",
-	   "#   # # #  ####",
-	   "# #   #  ##   #",
-	   "# ##### ### ###",
-	   "# #   #       #",
-	   "# # # ##### # #",
-	   "# # #      ## #",
-	   "#    # # # #  #",
-	   "########## ####",
+		//i guess its looks not right... but it works meow meow moew````
+	   "#############################",
+	   "#     #               # #   #",
+	   "#  #  # ########   ##   # # #",
+	   "# #####        #####  ### # #",
+	   "#  #      #  ###   #      # #",
+	   "#  #   #  #  #              #",
+	   "## #   #  #  ####           #",
+	   "#      ####  #  #           #",
+	   "#  #   #        #           #",
+	   "#  #   ####  ####           #",
+	   "# ######     #              #",
+	   "#  #       #####            #",
+	   "# ######   #                #",
+	   "#  #   #   #  #####         #",
+	   "## # # #####      #    #    #",
+	   "#  # # #   ###  # #    #    #",
+	   "     #   #      #      #    #",
+	   " ############################",
 	};
 
-	XMVECTOR maze_offset = XMVectorSet(-14.0f, 0.0f, -15.0f, 0.0);
+	XMVECTOR maze_offset = XMVectorSet(-55.0f, -3.0f, 35.0f, 0.0);
 	XMVECTOR box_min = XMVectorSet(-0.5f, -0.5f, -0.5f, 1.0);
 	XMVECTOR box_max = XMVectorSet(0.5f, 0.5f, 0.5f, 1.0);
 	for (int j = 0; j < maze_data.size(); ++j)
@@ -1767,13 +1793,15 @@ void TreeBillboardsApp::BuildRenderItems()
 		{
 			if (maze_data[j][i] == '#')
 			{
-				XMVECTOR wall_pos = XMVectorSet(i * 2.0f, 2.0f, -j * 2.0f, 0.0);
+				XMVECTOR wall_pos = XMVectorSet(i * 4.0f, 4.0f, -j * 4.0f, 0.0);
 				wall_pos = wall_pos + maze_offset;
 
 				XMMATRIX trans = XMMatrixTranslation(XMVectorGetX(wall_pos), XMVectorGetY(wall_pos),
 					XMVectorGetZ(wall_pos));
-				XMMATRIX scale = XMMatrixScaling(2.0f, 5.0f, 2.0f);
+				XMMATRIX scale = XMMatrixScaling(4.0f, 10.0f, 4.0f);
+				//XMMATRIX rotat = XMMatrixRotationY(XM_PIDIV2);
 				XMMATRIX mat = scale * trans;
+					//* rotat;
 
 				std::pair<XMVECTOR, XMVECTOR> bounds = {
 					XMVector4Transform(box_min, mat), XMVector4Transform(box_max, mat)
@@ -1784,7 +1812,7 @@ void TreeBillboardsApp::BuildRenderItems()
 
 				XMStoreFloat4x4(&mazeRitem->World, mat);
 				mazeRitem->ObjCBIndex = objIndex++;
-				mazeRitem->Mat = mMaterials["checkboard"].get();
+				mazeRitem->Mat = mMaterials["bricks"].get();
 				mazeRitem->Geo = mGeometries["boxGeo"].get();
 				mazeRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 				mazeRitem->IndexCount = mazeRitem->Geo->DrawArgs["box"].IndexCount;
@@ -1862,6 +1890,8 @@ void TreeBillboardsApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, cons
 
 		cmdList->DrawIndexedInstanced(ri->IndexCount, 1, ri->StartIndexLocation, ri->BaseVertexLocation, 0);
 	}
+
+	
 }
 
 std::array<const CD3DX12_STATIC_SAMPLER_DESC, 6> TreeBillboardsApp::GetStaticSamplers()
